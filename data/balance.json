@@ -1,0 +1,27 @@
+{
+  "_comment": "All numeric balance values. Never hardcode in .cs files.",
+  "_version": 1,
+  "tick": {
+    "hz": 10,
+    "interpolation": true
+  },
+  "carrier": {
+    "base_speed_cells_per_second": 2,
+    "max_carry_amount": 8
+  },
+  "storehouse": {
+    "base_carrier_count": 3,
+    "level_2_carrier_count": 5,
+    "level_3_carrier_count": 8,
+    "max_storage": 999
+  },
+  "production": {
+    "food_plain_multiplier": 2.0,
+    "food_fancy_multiplier": 3.0,
+    "tool_requirement_units": 1
+  },
+  "hex": {
+    "size": 1.0,
+    "flat_top": true
+  }
+}

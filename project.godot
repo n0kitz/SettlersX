@@ -11,9 +11,17 @@ config_version=5
 [application]
 
 config/name="SettlersX"
-run/main_scene="res://src/Main.tscn"
-config/features=PackedStringArray("4.6", "C#", "Mobile")
+run/main_scene="res://scenes/world/Main.tscn"
+config/features=PackedStringArray("4.4", "C#", "Mobile")
 config/icon="res://icon.png"
+
+[autoload]
+
+EventBus="*res://src/Sim/Core/EventBus.cs"
+ResourceDatabase="*res://src/Data/ResourceDatabase.cs"
+WorldSim="*res://src/Sim/Core/WorldSim.cs"
+GameManager="*res://src/Sim/Core/GameManager.cs"
+InputRouter="*res://src/Views/Core/InputRouter.cs"
 
 [display]
 

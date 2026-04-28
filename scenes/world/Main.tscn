@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3 uid="uid://b0settlersxmain"]
+
+[ext_resource type="Script" path="res://src/Views/World/MainView.cs" id="1_mainview"]
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_mainview")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.832050085067749, 0.554700374603271, 0, -0.554700374603271, 0.832050085067749, 0, 15, 10)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.866025447845459, -0.500000059604645, 0, 0.500000059604645, 0.866025447845459, 0, 10, 10)

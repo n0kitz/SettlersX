@@ -1,0 +1,13 @@
+bin/
+obj/
+.godot/
+.import/
+**/*.import
+assets/**/*.png
+assets/**/*.wav
+assets/**/*.blend
+*.log
+coverage/
+TestResults/
+.env
+.env.*
