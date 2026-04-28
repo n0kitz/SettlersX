@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Read", "Glob", "Grep", "LS",
+      "Edit", "Write", "MultiEdit",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet format:*)",
+      "Bash(dotnet add:*)",
+      "Bash(godot --headless:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git branch:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./secrets/**)",
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Edit(./project.godot)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Edit(./data/balance.json)"
+    ]
+  },
+  "defaultMode": "plan"
+}
