@@ -111,3 +111,7 @@ Update PLAN.md at the end of every work session.
 - Scene tree is single-threaded — use CallDeferred from workers
 - RenderingServer, PhysicsServer3D, NavigationServer3D are thread-safe
 - Delta in _Process is double, not float
+
+## Prompt Engineering
+
+@promptimprover/SKILL.md
