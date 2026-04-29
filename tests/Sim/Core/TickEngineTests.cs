@@ -1,6 +1,9 @@
+using System;
 using GdUnit4;
 using SettlersX.Sim.Core;
 using static GdUnit4.Assertions;
+
+namespace SettlersX.Tests.Sim.Core;
 
 [TestSuite]
 public class TickEngineTests
@@ -61,5 +64,36 @@ public class TickEngineTests
     engine.Paused = true;
     engine.StepOnce();
     AssertThat(engine.TickNumber).IsEqual(1);
+  }
+
+  [TestCase]
+  public void Constructor_ZeroHz_Throws()
+  {
+    AssertThrown(() => new TickEngine(tickHz: 0.0))
+        .IsInstanceOf<ArgumentOutOfRangeException>();
+  }
+
+  [TestCase]
+  public void Constructor_NegativeHz_Throws()
+  {
+    AssertThrown(() => new TickEngine(tickHz: -5.0))
+        .IsInstanceOf<ArgumentOutOfRangeException>();
+  }
+
+  [TestCase]
+  public void Advance_NegativeDelta_ReturnsZero()
+  {
+    var engine = new TickEngine(tickHz: 10.0);
+    var fired = engine.Advance(-1.0);
+    AssertThat(fired).IsEqual(0);
+    AssertThat(engine.TickNumber).IsEqual(0);
+  }
+
+  [TestCase]
+  public void Advance_HugeDelta_CapsAtMaxTicksPerFrame()
+  {
+    var engine = new TickEngine(tickHz: 10.0);
+    var fired = engine.Advance(999.0); // would be 9990 ticks without cap
+    AssertThat(fired).IsEqual(TickEngine.MaxTicksPerFrame);
   }
 }

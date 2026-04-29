@@ -17,15 +17,15 @@ config/icon="res://icon.png"
 
 [autoload]
 
-EventBus="*res://src/Sim/Core/EventBus.cs"
+EventBus="*res://src/Core/EventBus.cs"
 ResourceDatabase="*res://src/Data/ResourceDatabase.cs"
-WorldSim="*res://src/Sim/Core/WorldSim.cs"
-GameManager="*res://src/Sim/Core/GameManager.cs"
+WorldSim="*res://src/Core/WorldSim.cs"
+GameManager="*res://src/Core/GameManager.cs"
 InputRouter="*res://src/Views/Core/InputRouter.cs"
 
 [display]
 
-window/size/viewport_width=720
+window/size/viewport_width=1280
 window/size/viewport_height=720
 window/size/initial_position_type=3
 window/size/window_width_override=1280

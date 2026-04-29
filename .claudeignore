@@ -11,3 +11,5 @@ coverage/
 TestResults/
 .env
 .env.*
+plans/
+badges/

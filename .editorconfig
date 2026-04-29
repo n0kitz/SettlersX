@@ -12,3 +12,16 @@ indent_size = 2
 dotnet_sort_system_directives_first = true
 csharp_new_line_before_open_brace = all
 csharp_prefer_braces = true:warning
+csharp_style_namespace_declarations = file_scoped:warning
+
+[*.{tscn,tres}]
+indent_style = tab
+indent_size = 4
+
+[*.gdshader]
+indent_style = tab
+indent_size = 4
+
+[*.json]
+indent_style = space
+indent_size = 2

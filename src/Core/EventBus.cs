@@ -1,20 +1,23 @@
+using System;
 using Godot;
 
 namespace SettlersX.Core;
 
 public partial class EventBus : Node
 {
-  public static EventBus Instance { get; private set; } = null!;
+  private static EventBus? _instance;
+  public static EventBus Instance => _instance
+      ?? throw new InvalidOperationException("EventBus autoload not initialized");
 
   public override void _EnterTree()
   {
-    if (Instance != null && Instance != this) { QueueFree(); return; }
-    Instance = this;
+    if (_instance != null && _instance != this) { QueueFree(); return; }
+    _instance = this;
   }
 
   public override void _ExitTree()
   {
-    if (Instance == this) { Instance = null!; }
+    if (_instance == this) { _instance = null; }
   }
 
   [Signal]

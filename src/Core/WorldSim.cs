@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using SettlersX.Sim.Core;
 
@@ -5,7 +6,9 @@ namespace SettlersX.Core;
 
 public partial class WorldSim : Node
 {
-  public static WorldSim Instance { get; private set; } = null!;
+  private static WorldSim? _instance;
+  public static WorldSim Instance => _instance
+      ?? throw new InvalidOperationException("WorldSim autoload not initialized");
 
   public TickEngine Engine { get; private set; } = null!;
   public double Alpha => Engine.Alpha;
@@ -17,8 +20,8 @@ public partial class WorldSim : Node
 
   public override void _EnterTree()
   {
-    if (Instance != null && Instance != this) { QueueFree(); return; }
-    Instance = this;
+    if (_instance != null && _instance != this) { QueueFree(); return; }
+    _instance = this;
   }
 
   public override void _Ready()
@@ -29,7 +32,7 @@ public partial class WorldSim : Node
 
   public override void _ExitTree()
   {
-    if (Instance == this) { Instance = null!; }
+    if (_instance == this) { _instance = null; }
   }
 
   public override void _Process(double delta)
@@ -42,11 +45,6 @@ public partial class WorldSim : Node
     }
   }
 
-  public override void _UnhandledInput(InputEvent @event)
-  {
-    if (@event.IsActionPressed("ui_accept"))  // Space — remap later
-    {
-      Paused = !Paused;
-    }
-  }
+  // Pause toggling is handled by InputRouter._UnhandledInput — do not add input
+  // handling here. See src/Views/Core/InputRouter.cs.
 }

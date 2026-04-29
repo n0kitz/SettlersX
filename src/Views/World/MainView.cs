@@ -5,15 +5,21 @@ namespace SettlersX.Views.World;
 
 public partial class MainView : Node3D
 {
+  private EventBus? _eventBus;
+
   public override void _Ready()
   {
     GD.Print("MainView ready");
-    EventBus.Instance.GameTicked += OnGameTicked;
+    _eventBus = EventBus.Instance;
+    _eventBus.GameTicked += OnGameTicked;
   }
 
   public override void _ExitTree()
   {
-    EventBus.Instance.GameTicked -= OnGameTicked;
+    if (IsInstanceValid(_eventBus))
+    {
+      _eventBus!.GameTicked -= OnGameTicked;
+    }
   }
 
   private void OnGameTicked(int tick)

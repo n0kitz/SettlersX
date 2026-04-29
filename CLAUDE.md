@@ -7,7 +7,7 @@ across sector-based territory, competing via military, trade, and prestige
 victory paths. Windows-first. Single-player with bot opponents. Godot 4.4 + C#.
 
 ## Tech Stack
-- Engine: Godot 4.6.2 (.NET / Mono), Forward+ renderer, Jolt Physics
+- Engine: Godot 4.4.1 (binary) + Godot.NET.Sdk 4.6.2 (NuGet), Mobile renderer
 - Language: C# 12 (.NET 10), nullable enabled, warnings-as-errors
 - State machines: Chickensoft.LogicBlocks (units and buildings)
 - DI: Chickensoft.AutoInject

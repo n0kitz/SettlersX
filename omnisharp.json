@@ -15,6 +15,6 @@
     "renameInStrings": true
   },
   "SDK": {
-    "includePrereleases": true
+    "includePrereleases": false
   }
 }

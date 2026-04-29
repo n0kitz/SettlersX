@@ -1,0 +1,38 @@
+name: "\U0001F9EA Tests"
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    name: "\U0001F9EA Build & Test"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_NOLOGO: true
+    defaults:
+      run:
+        shell: bash
+        working-directory: SettlersX
+    steps:
+      - name: "\U0001F4CB Checkout"
+        uses: actions/checkout@v4
+
+      - name: "\U0001F4BD Setup .NET SDK"
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: SettlersX/global.json
+
+      - name: "\U0001F4E6 Restore Dependencies"
+        run: dotnet restore
+
+      - name: "\U0001F527 Build"
+        run: dotnet build SettlersX.sln -c Debug --no-restore
+
+      - name: "\U0001F9EA Run Sim Tests (no Godot runtime)"
+        run: dotnet test --settings .runsettings --filter "Category!=Integration" --no-build
+
+      - name: "\U0001F3D7 Run Architecture Tests"
+        run: dotnet test --settings .runsettings --filter "Category=Architecture" --no-build
