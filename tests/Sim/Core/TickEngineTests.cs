@@ -96,4 +96,40 @@ public class TickEngineTests
     var fired = engine.Advance(999.0); // would be 9990 ticks without cap
     AssertThat(fired).IsEqual(TickEngine.MaxTicksPerFrame);
   }
+
+  [TestCase]
+  public void Advance_ZeroDelta_FiresNoTicks()
+  {
+    var engine = new TickEngine(tickHz: 10.0);
+    var fired = engine.Advance(0.0);
+    AssertThat(fired).IsEqual(0);
+    AssertThat(engine.TickNumber).IsEqual(0);
+    AssertThat(engine.Alpha).IsEqual(0.0);
+  }
+
+  [TestCase]
+  public void StepOnce_ResetsAccumulator_SoNextAdvanceStartsClean()
+  {
+    var engine = new TickEngine(tickHz: 10.0);
+    engine.Paused = true;
+    engine.Advance(0.09); // accumulate 90% of an interval
+    engine.StepOnce();    // manual step — should reset accumulator
+    engine.Paused = false;
+    var fired = engine.Advance(0.05); // only 50% — should NOT fire another tick
+    AssertThat(fired).IsEqual(0);
+    AssertThat(engine.TickNumber).IsEqual(1); // only the StepOnce tick
+  }
+
+  [TestCase]
+  public void Advance_PartialAccumulation_AccumulatesAcrossMultipleCalls()
+  {
+    var engine = new TickEngine(tickHz: 10.0); // interval = 0.1s
+    var fired1 = engine.Advance(0.06); // 60% of interval — no tick yet
+    AssertThat(fired1).IsEqual(0);
+    var fired2 = engine.Advance(0.06); // 120% total — exactly 1 tick, 20% leftover
+    AssertThat(fired2).IsEqual(1);
+    AssertThat(engine.TickNumber).IsEqual(1);
+    AssertThat(engine.Alpha).IsGreaterEqual(0.0);
+    AssertThat(engine.Alpha).IsLess(1.0);
+  }
 }

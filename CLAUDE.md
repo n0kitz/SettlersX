@@ -8,7 +8,7 @@ victory paths. Windows-first. Single-player with bot opponents. Godot 4.4 + C#.
 
 ## Tech Stack
 - Engine: Godot 4.4.1 (binary) + Godot.NET.Sdk 4.6.2 (NuGet), Mobile renderer
-- Language: C# 12 (.NET 10), nullable enabled, warnings-as-errors
+- Language: C# 14 (.NET 10), nullable enabled, warnings-as-errors
 - State machines: Chickensoft.LogicBlocks (units and buildings)
 - DI: Chickensoft.AutoInject
 - Tests: gdUnit4Net 5.x via dotnet test
@@ -112,6 +112,8 @@ Update PLAN.md at the end of every work session.
 - RenderingServer, PhysicsServer3D, NavigationServer3D are thread-safe
 - Delta in _Process is double, not float
 
-## Prompt Engineering
+## Skills
+
+@caveman/SKILL.md
 
 @promptimprover/SKILL.md

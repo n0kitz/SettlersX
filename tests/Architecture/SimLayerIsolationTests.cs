@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using GdUnit4;
@@ -121,6 +122,68 @@ public class SimLayerIsolationTests
     AssertThat(violations)
         .OverrideFailureMessage("Sim type inherits from Godot class:\n" +
                                 string.Join("\n", violations))
+        .IsEmpty();
+  }
+
+  /// <summary>
+  /// Source-level scan: catches Godot API usage inside method bodies that reflection cannot see.
+  /// Checks .cs files under src/Sim/ for patterns that violate the pure-C# rule.
+  /// </summary>
+  [TestCase]
+  public void SimSourceFiles_MustNotContainDisallowedGodotUsage()
+  {
+    // Locate src/Sim/ relative to this test assembly's output directory
+    var assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+    // Walk up from bin/Debug/net10.0 to project root
+    var projectRoot = assemblyDir;
+    for (var i = 0; i < 4; i++)
+    {
+      projectRoot = Path.GetDirectoryName(projectRoot) ?? projectRoot;
+    }
+    var simDir = Path.Combine(projectRoot, "src", "Sim");
+
+    if (!Directory.Exists(simDir))
+    {
+      // If we can't locate src/Sim/, skip rather than false-fail
+      return;
+    }
+
+    // Patterns that are forbidden in src/Sim/ source files
+    var forbiddenPatterns = new[]
+    {
+      "GD.Print", "GD.PushError", "GD.PushWarning", "GD.PrintErr",
+      "[Export]", "[Signal]", "[GlobalClass]",
+      ": Node", ": Resource",
+    };
+
+    var violations = new List<string>();
+    foreach (var file in Directory.EnumerateFiles(simDir, "*.cs", SearchOption.AllDirectories))
+    {
+      var lines = File.ReadAllLines(file);
+      for (var lineIdx = 0; lineIdx < lines.Length; lineIdx++)
+      {
+        var line = lines[lineIdx];
+        // Skip comment lines — they may contain pattern names for documentation
+        var trimmed = line.TrimStart();
+        if (trimmed.StartsWith("//") || trimmed.StartsWith("*") || trimmed.StartsWith("///"))
+        {
+          continue;
+        }
+        foreach (var pattern in forbiddenPatterns)
+        {
+          if (line.Contains(pattern, StringComparison.Ordinal))
+          {
+            var relPath = Path.GetRelativePath(projectRoot, file);
+            violations.Add($"{relPath}:{lineIdx + 1}: contains \"{pattern}\"");
+          }
+        }
+      }
+    }
+
+    AssertThat(violations)
+        .OverrideFailureMessage(
+            "Sim source file contains disallowed Godot API usage:\n" +
+            string.Join("\n", violations))
         .IsEmpty();
   }
 }

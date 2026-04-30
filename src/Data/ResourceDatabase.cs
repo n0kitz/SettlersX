@@ -3,6 +3,11 @@ using Godot;
 
 namespace SettlersX.Data;
 
+/// <summary>
+/// Loads and caches typed Resource assets (.tres) at startup.
+/// Query by concrete type — e.g. <c>ResourceDatabase.Instance.Get&lt;BuildingDef&gt;("lumberjack")</c>.
+/// Stub in Phase 0 — asset loading begins in Phase 1.
+/// </summary>
 public partial class ResourceDatabase : Node
 {
   private static ResourceDatabase? _instance;

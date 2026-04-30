@@ -27,7 +27,7 @@ public partial class InputRouter : Node
 
   public override void _UnhandledInput(InputEvent @event)
   {
-    if (@event.IsActionPressed("ui_accept"))  // Space — remap in Phase 1
+    if (@event.IsActionPressed("pause_game"))
     {
       WorldSim.Instance.Paused = !WorldSim.Instance.Paused;
     }

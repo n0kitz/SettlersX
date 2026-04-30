@@ -4,18 +4,27 @@ using SettlersX.Sim.Core;
 
 namespace SettlersX.Core;
 
+/// <summary>
+/// Drives the simulation tick loop each frame via TickEngine.Advance.
+/// Emits <see cref="EventBus.GameTicked"/> for every tick fired.
+/// Exposes Alpha for view-layer interpolation between ticks.
+/// </summary>
 public partial class WorldSim : Node
 {
   private static WorldSim? _instance;
   public static WorldSim Instance => _instance
       ?? throw new InvalidOperationException("WorldSim autoload not initialized");
 
-  public TickEngine Engine { get; private set; } = null!;
-  public double Alpha => Engine.Alpha;
+  public TickEngine? Engine { get; private set; }
+
+  /// <summary>Interpolation alpha [0,1] between last and next tick. Returns 0 before _Ready.</summary>
+  public double Alpha => Engine?.Alpha ?? 0.0;
+
+  /// <summary>Pause state. Setter is a no-op before _Ready.</summary>
   public bool Paused
   {
-    get => Engine.Paused;
-    set => Engine.Paused = value;
+    get => Engine?.Paused ?? false;
+    set { if (Engine != null) { Engine.Paused = value; } }
   }
 
   public override void _EnterTree()
@@ -26,8 +35,10 @@ public partial class WorldSim : Node
 
   public override void _Ready()
   {
-    // Read tick rate from balance.json later — hardcode for now
-    Engine = new TickEngine(tickHz: 10.0);
+    var json = FileAccess.GetFileAsString("res://data/balance.json");
+    var balance = Newtonsoft.Json.Linq.JObject.Parse(json);
+    var hz = (double)(balance["tick"]!["hz"]!);
+    Engine = new TickEngine(tickHz: hz);
   }
 
   public override void _ExitTree()
@@ -37,11 +48,13 @@ public partial class WorldSim : Node
 
   public override void _Process(double delta)
   {
+    if (Engine == null) { return; }
     var ticks = Engine.Advance(delta);
+    if (ticks <= 0) { return; }
+    var bus = EventBus.Instance;
     for (var i = 0; i < ticks; i++)
     {
-      EventBus.Instance.EmitSignal(
-          EventBus.SignalName.GameTicked, Engine.TickNumber);
+      bus.EmitSignal(EventBus.SignalName.GameTicked, Engine.TickNumber);
     }
   }
 

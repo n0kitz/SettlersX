@@ -17,11 +17,15 @@ dynamic avoidance — roads are the constraint. Pathfinding needs to be:
 
 ## Decision
 
-Use `Godot.AStar3D` for road-following pathfinding in the sim layer. Hex grid cells that have
-roads are registered as AStar points. The sim calls `GetPointPath()` on state changes only
-(not every tick). The resulting path array is stored on the carrier entity.
+Use a **pure C# A\* implementation (`HexPathfinder`)** in `src/Sim/` for deterministic,
+headlessly-testable road-following pathfinding. Hex grid cells with roads are registered as
+graph nodes; the pathfinder queries on state changes only (not every tick) and stores the
+resulting path array on the carrier entity.
 
-`NavigationAgent3D` and its avoidance are not used.
+A thin `RoadPathfinderBridge` in `src/Views/` may synchronize a `Godot.AStar3D` instance for
+view-layer needs (e.g. debug visualization), but the sim never touches `Godot.AStar3D`.
+
+`NavigationAgent3D` and its avoidance are not used anywhere.
 
 ## Consequences
 
@@ -29,13 +33,9 @@ roads are registered as AStar points. The sim calls `GetPointPath()` on state ch
 - Deterministic paths — same input always yields same route.
 - O(E log V) per query, no per-frame O(n²) cost.
 - Carriers on roads naturally avoid overlap by road capacity constraints.
-- Path computation happens in sim layer — testable headlessly.
+- Path computation stays in `src/Sim/` — fully testable without the Godot runtime.
+- Preserves the strict Sim/View split; no Godot type leaks into the sim layer.
 
 **Bad:**
 - No dynamic obstacle avoidance (acceptable — roads are fixed, carriers yield by design).
-- Must manually maintain AStar graph when roads are built/destroyed.
-
-## Note
-
-`AStar3D` is a Godot math utility class (`Godot.AStar3D`). Its use in `src/Sim/` is a narrow
-exception to the Godot-free rule — flagged in the architecture test allowlist if needed.
+- Must manually maintain the path graph when roads are built or destroyed.

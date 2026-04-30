@@ -54,8 +54,12 @@ public class TickEngine
   /// </summary>
   public double Alpha => _accumulator / TickInterval;
 
+  /// <summary>
+  /// Manually fire one tick (debug/testing). Resets accumulator to avoid surprise ticks on next Advance.
+  /// </summary>
   public void StepOnce()
   {
     TickNumber++;
+    _accumulator = 0.0;
   }
 }

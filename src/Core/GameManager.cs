@@ -3,6 +3,10 @@ using Godot;
 
 namespace SettlersX.Core;
 
+/// <summary>
+/// Owns match-level state: players, active victory paths, and game phase transitions.
+/// Stub in Phase 0 — implementation begins in Phase 2.
+/// </summary>
 public partial class GameManager : Node
 {
   private static GameManager? _instance;

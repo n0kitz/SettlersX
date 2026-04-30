@@ -3,6 +3,10 @@ using Godot;
 
 namespace SettlersX.Core;
 
+/// <summary>
+/// Signal hub for all cross-system communication. Every inter-layer signal is declared here.
+/// Must be the first autoload — all other autoloads may subscribe in their _Ready.
+/// </summary>
 public partial class EventBus : Node
 {
   private static EventBus? _instance;
