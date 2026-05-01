@@ -30,6 +30,12 @@ public partial class InputRouter : Node
     if (@event.IsActionPressed("pause_game"))
     {
       WorldSim.Instance.Paused = !WorldSim.Instance.Paused;
+      return;
+    }
+    if (@event.IsActionPressed("step_once"))
+    {
+      WorldSim.Instance.Paused = true;
+      WorldSim.Instance.StepOnce();
     }
   }
 }

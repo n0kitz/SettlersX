@@ -37,4 +37,7 @@ public partial class EventBus : Node
   public delegate void VictoryAchievedEventHandler(
       int playerId, string victoryPath);
   [Signal] public delegate void GameTickedEventHandler(int tickNumber);
+
+  [Signal]
+  public delegate void RoadBuiltEventHandler(Vector2I a, Vector2I b);
 }

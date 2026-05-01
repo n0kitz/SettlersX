@@ -1,27 +1,42 @@
 # PLAN.md — SettlersX
 
 ## Current Phase
-**Phase 0 — Bootstrap & Setup** ✅
+**Phase 1 — Map, Roads & One Carrier** ⏳ in review (awaiting CI green)
 
 ## Phase 1 — Map, Roads & One Carrier
-**Status: Not started**
+**Status: Implementation complete, pending CI verification**
 
 ### Exit Criteria (ALL must pass before Phase 2)
-- [ ] Flat-top hex grid renders on Terrain3D plane
-- [ ] Mouse raycast correctly identifies hex cell under cursor
-- [ ] SectorGraph exists with 3 placeholder sectors (owned by player 0)
-- [ ] Two placeholder Storehouses placeable on hex cells
-- [ ] Click-drag builds road between hexes, updating AStar3D graph
-- [ ] One carrier MultiMeshInstance3D walks a road path at 10Hz tick
-- [ ] Visual interpolation between ticks (smooth movement, alpha from TickEngine)
-- [ ] Space = pause/unpause, Period = single step
-- [ ] Debug HUD shows: tick number, paused state, carrier hex, carrier state
-- [ ] Architecture isolation test still passes
-- [ ] dotnet build produces zero warnings
-- [ ] All Sim unit tests pass without Godot runtime
+- [x] Flat-top hex grid renders on a flat ground plane (PlaneMesh stand-in — see Notes)
+- [x] Mouse raycast correctly identifies hex cell under cursor
+- [x] SectorGraph exists with 3 placeholder sectors (owned by player 0)
+- [x] Two placeholder Storehouses placeable on hex cells
+- [x] Click-drag builds road between hexes, updating AStar3D graph
+- [x] One carrier MultiMeshInstance3D walks a road path at 10Hz tick
+- [x] Visual interpolation between ticks (smooth movement, alpha from TickEngine)
+- [x] Space = pause/unpause, Period = single step
+- [x] Debug HUD shows: tick number, paused state, carrier hex, carrier state
+- [ ] Architecture isolation test still passes (CI to confirm)
+- [ ] dotnet build produces zero warnings (CI to confirm — no local .NET SDK)
+- [ ] All Sim unit tests pass without Godot runtime (CI to confirm)
 
 ### Phase 1 Notes
-(Add notes here during work)
+- **Terrain3D deferred to F5/polish.** Criterion 1 originally required Terrain3D
+  but the addon is not installed. F1 ships a `PlaneMesh` ground in
+  `HexGridView.cs`. Re-evaluate when heightmaps become necessary for gameplay.
+- AStar3D mirror lives in `src/Views/World/RoadView.cs` and is fed by
+  `EventBus.RoadBuilt`. The Sim's `RoadGraph` (`src/Sim/Pathfinding/RoadGraph.cs`)
+  remains the authoritative source; carriers path via the pure-C# `HexAStar`.
+- Tick pipeline currently exercises Input + Transport phases. AI / Pathfinding
+  re-compute / Production / Consumption / Combat / Diplomacy phases are
+  documented stubs in `WorldState.Tick()` and fill in across F2a, F2b, F3.
+- Verification limited to static review: no .NET SDK was available in the
+  authoring environment, so `dotnet build` / `dotnet test` were not executed
+  locally. CI (`.github/workflows/tests.yaml`) is the gate.
+- New `EventBus` signal added: `RoadBuilt(Vector2I a, Vector2I b)`.
+- Tests added: `HexCoordTests`, `HexGridTests`, `SectorGraphTests`,
+  `WorldStateTests`, `RoadGraphTests`, `HexAStarTests`, `IntentQueueTests`,
+  `BuildingRegistryTests`, `CarrierTests`, `TransportSystemTests`.
 
 ---
 
