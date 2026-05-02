@@ -10,6 +10,7 @@
 | 0006 | Two-map model hex+polygon      | Accepted | 2026-04-28 |
 | 0007 | ECS deferred to Phase 2+       | Accepted | 2026-04-28 |
 | 0008 | Save/load in Phase 2.5         | Accepted | 2026-04-28 |
+| 0009 | Build & supply chain hardening | Accepted | 2026-05-02 |
 
 Read the relevant ADR before changing any decided pattern.
 Write a new ADR if you need to override a decision.

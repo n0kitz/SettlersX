@@ -33,7 +33,10 @@ jobs:
           restore-keys: nuget-${{ runner.os }}-
 
       - name: "\U0001F4E6 Restore Dependencies"
-        run: dotnet restore
+        run: dotnet restore --use-lock-file
+
+      - name: "\U0001F6E1 Vulnerable Package Audit"
+        run: dotnet list package --vulnerable --include-transitive
 
       - name: "\U0001F527 Build"
         run: dotnet build SettlersX.sln -c Debug --no-restore
