@@ -46,9 +46,18 @@ public partial class WorldSim : Node
     var hz = (double)(balance["tick"]!["hz"]!);
     HexSize = (double)(balance["hex"]!["size"]!);
     Engine = new TickEngine(tickHz: hz);
-    World = new WorldState(DefaultGridWidth, DefaultGridHeight);
+
+    var carriersPerStorehouse = (int)(balance["storehouse"]!["base_carrier_count"]!);
+    var catalog = BuildingCatalog.CreateDefault(
+        lumberDuration: (int)(balance["chain"]!["lumber_camp_duration_ticks"]!),
+        sawmillDuration: (int)(balance["chain"]!["sawmill_duration_ticks"]!),
+        bufferCapacity: (int)(balance["chain"]!["buffer_capacity"]!),
+        storehouseStockCap: (int)(balance["chain"]!["storehouse_stock_capacity"]!),
+        houseCostPlanks: (int)(balance["chain"]!["house_cost_planks"]!));
+    World = new WorldState(DefaultGridWidth, DefaultGridHeight, catalog, carriersPerStorehouse);
     World.BuildingPlaced += OnBuildingPlaced;
     World.RoadBuilt += OnRoadBuilt;
+    World.ConstructionCompleted += OnConstructionCompleted;
   }
 
   public override void _ExitTree()
@@ -57,6 +66,7 @@ public partial class WorldSim : Node
     {
       World.BuildingPlaced -= OnBuildingPlaced;
       World.RoadBuilt -= OnRoadBuilt;
+      World.ConstructionCompleted -= OnConstructionCompleted;
     }
     if (_instance == this) { _instance = null; }
   }
@@ -75,6 +85,16 @@ public partial class WorldSim : Node
         EventBus.SignalName.RoadBuilt,
         new Vector2I(a.Q, a.R),
         new Vector2I(b.Q, b.R));
+  }
+
+  private void OnConstructionCompleted(HexCoord hex)
+  {
+    var building = World?.Buildings.At(hex);
+    if (building == null) { return; }
+    EventBus.Instance.EmitSignal(
+        EventBus.SignalName.BuildingFinalized,
+        building.DefId,
+        new Vector2I(hex.Q, hex.R));
   }
 
   public override void _Process(double delta)

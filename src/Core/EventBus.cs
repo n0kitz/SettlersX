@@ -40,4 +40,11 @@ public partial class EventBus : Node
 
   [Signal]
   public delegate void RoadBuiltEventHandler(Vector2I a, Vector2I b);
+
+  /// <summary>
+  /// Fires once a construction site is promoted to its finished form. Carries the
+  /// new DefId (e.g. <c>"house"</c>) so the view can re-skin without reading sim state.
+  /// </summary>
+  [Signal]
+  public delegate void BuildingFinalizedEventHandler(string defId, Vector2I hexCell);
 }

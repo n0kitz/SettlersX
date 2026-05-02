@@ -1,8 +1,7 @@
 # PLAN.md — SettlersX
 
 ## Current Phase
-**Phase S1 — Build & Supply Chain Hardening** ✅ implementation complete (awaiting CI green)
-Next: **Phase 2a — First Vertical Slice (One Full Chain)**
+**Phase 2a — First Vertical Slice (One Full Chain)** ⏳ in review (awaiting CI green)
 
 ## Phase 1 — Map, Roads & One Carrier
 **Status: Implementation complete, pending CI verification**
@@ -42,17 +41,45 @@ Next: **Phase 2a — First Vertical Slice (One Full Chain)**
 ---
 
 ## Phase 2a — First Vertical Slice (One Full Chain)
-**Status: Not started**
+**Status: Implementation complete, pending CI verification**
 
 ### Exit Criteria
-- [ ] One complete chain functional: Tree → Lumber Camp → Wood → 
-      Sawmill → Planks → Constructor → House built
-- [ ] Job board matches supply offers to demand requests per tick
-- [ ] Carriers pick up and deliver goods along road graph
-- [ ] Resource counts visible in HUD per sector
-- [ ] 10-minute playable session possible on one sector
-- [ ] Chain-failure HUD indicator (blocked input flashing icon)
-- [ ] All sim tests pass, coverage on chain logic >80%
+- [x] One complete chain functional: LumberCamp → Wood → Sawmill → Planks →
+      ConstructionSite → House (Tree harvesting deferred — see Notes)
+- [x] Job board matches supply offers to demand requests per tick
+      (`JobBoard.TryFindJob` + reservation; `Refund` on path failure)
+- [x] Carriers pick up and deliver goods along road graph
+      (`TransportSystem` walks pickup→delivery path concat)
+- [x] Resource counts visible in HUD per sector
+      (`DebugHud` sums Stock per sector)
+- [x] Chain-failure HUD indicator (`ProductionState.IsStarved` shown in HUD)
+- [x] Production tick order respects pipeline:
+      Input → Production → Transport (consumption folded into Production)
+- [x] balance.json drives chain numbers (`chain` block)
+- [x] All Sim unit tests pass, end-to-end chain test
+      (`TransportSystemTests.Tick_FullChain_HouseEventuallyConstructs`)
+- [ ] dotnet build produces zero warnings (CI to confirm)
+- [ ] CI green on merged Sim + Architecture tests
+- [ ] 10-minute playable session validated by hand (deferred to F2b polish)
+
+### F2a Notes
+- **Tree harvesting deferred to F2b.** F2a's LumberCamp is a raw producer
+  (no input tile). Tree resources on hex tiles arrive with the map authoring
+  pass in F2b alongside the second/third chains.
+- **Sector inventory is sum across storehouses.** Multiple storehouses in
+  the same sector pool stock for HUD totals. JobBoard treats them as a
+  shared pool when matching demand to supply.
+- **Reservation model.** JobBoard decrements Source on assignment, refunds
+  on path failure, drops cargo on delivery to a finalized ConstructionSite.
+  Overshoot of construction Delivered above Cost is intentional and bounded
+  by carrier count; investigated for F2b if it becomes visible to players.
+- **No Tree-harvesting visualisation.** LumberCamp shows green; no felled
+  trees, no chopping animation. Visuals land in F6/polish.
+- **One-hex footprint everywhere.** Multi-hex footprints arrive when sites
+  need adjacent worker tiles (F2b).
+- **EventBus.BuildingFinalized** added so the view can re-skin a site to a
+  house without reading sim state.
+- New keys: `1=Storehouse 2=LumberCamp 3=Sawmill 4=ConstructionSite`.
 
 ---
 

@@ -1,70 +1,117 @@
 using System.Collections.Generic;
-using System.Linq;
 using SettlersX.Sim.Pathfinding;
 using SettlersX.Sim.World;
 
 namespace SettlersX.Sim.Economy;
 
 /// <summary>
-/// Transport phase of the tick pipeline. Phase 1 scope: ensure exactly one carrier
-/// exists once two connected storehouses are on the map, and shuttle it back and
-/// forth along the road graph. F2a expands this into job-board-driven dispatch.
+/// Transport phase of the tick pipeline.
+///
+/// 1. Spawns carriers up to each storehouse's quota.
+/// 2. Steps every Moving carrier one hex along its assigned path.
+/// 3. On Arrived: delivers cargo at the job's destination, clears the job.
+/// 4. On Idle: asks <see cref="JobBoard"/> for a job. If found, computes the
+///    pickup→delivery path; on success the carrier accepts; on failure the
+///    reservation is refunded so JobBoard does not lose the resource.
 /// </summary>
 public static class TransportSystem
 {
   public const string StorehouseDefId = "storehouse";
 
-  public static void Tick(WorldState state)
+  public static void Tick(WorldState state, int carriersPerStorehouse)
   {
-    EnsureCarrier(state);
+    SpawnCarriers(state, carriersPerStorehouse);
+
     foreach (var carrier in state.Carriers)
     {
       switch (carrier.State)
       {
-        case CarrierState.Idle:
-        case CarrierState.Arrived:
-          AssignNextRoute(state, carrier);
-          break;
         case CarrierState.Moving:
           carrier.Step();
+          break;
+        case CarrierState.Arrived:
+          DeliverCargo(carrier);
+          AssignNextJob(state, carrier);
+          break;
+        case CarrierState.Idle:
+          AssignNextJob(state, carrier);
           break;
       }
     }
   }
 
-  private static void EnsureCarrier(WorldState state)
+  private static void SpawnCarriers(WorldState state, int carriersPerStorehouse)
   {
-    if (state.Carriers.Count > 0) { return; }
-    var storehouses = OrderedStorehouses(state);
-    if (storehouses.Count < 2) { return; }
-    var path = HexAStar.Find(state.Roads, storehouses[0].Origin, storehouses[1].Origin);
-    if (path == null) { return; }
-    state.SpawnCarrier(storehouses[0].Origin);
+    foreach (var b in state.Buildings.All)
+    {
+      if (b.Kind != BuildingKind.Storehouse) { continue; }
+      var owned = CountCarriersForHome(state.Carriers, b.Id);
+      var deficit = carriersPerStorehouse - owned;
+      for (var i = 0; i < deficit; i++)
+      {
+        state.SpawnCarrier(b.Origin, b.Id);
+      }
+    }
   }
 
-  private static void AssignNextRoute(WorldState state, Carrier carrier)
+  private static int CountCarriersForHome(IReadOnlyList<Carrier> carriers, int homeId)
   {
-    var storehouses = OrderedStorehouses(state);
-    if (storehouses.Count < 2)
+    var count = 0;
+    foreach (var c in carriers)
     {
-      carrier.Reset();
-      return;
+      if (c.HomeBuildingId == homeId) { count++; }
     }
-    var aOrigin = storehouses[0].Origin;
-    var bOrigin = storehouses[1].Origin;
-    var goal = carrier.Hex.Equals(aOrigin) ? bOrigin : aOrigin;
-    var path = HexAStar.Find(state.Roads, carrier.Hex, goal);
-    if (path == null || path.Count < 2)
-    {
-      carrier.Reset();
-      return;
-    }
-    carrier.AssignPath(path);
+    return count;
   }
 
-  private static List<Building> OrderedStorehouses(WorldState state) =>
-      state.Buildings.All
-          .Where(b => b.DefId == StorehouseDefId)
-          .OrderBy(b => b.Id)
-          .ToList();
+  private static void DeliverCargo(Carrier carrier)
+  {
+    if (carrier.CurrentJob is not Job job) { return; }
+    if (carrier.Cargo.IsEmpty) { carrier.ClearJob(); return; }
+
+    switch (job.Kind)
+    {
+      case JobKind.PushToStock:
+        job.Destination.Stock?.Add(carrier.Cargo.Kind, carrier.Cargo.Count);
+        break;
+      case JobKind.PullToInput:
+        job.Destination.Production?.Input.Add(carrier.Cargo.Kind, carrier.Cargo.Count);
+        break;
+      case JobKind.PullToConstruction:
+        job.Destination.Construction?.Delivered.Add(carrier.Cargo.Kind, carrier.Cargo.Count);
+        break;
+    }
+    carrier.ClearJob();
+  }
+
+  private static void AssignNextJob(WorldState state, Carrier carrier)
+  {
+    if (!JobBoard.TryFindJob(state, carrier.Hex, out var job)) { return; }
+
+    var pickupPath = HexAStar.Find(state.Roads, carrier.Hex, job.Source.Origin);
+    var deliveryPath = HexAStar.Find(state.Roads, job.Source.Origin, job.Destination.Origin);
+    if (pickupPath == null || deliveryPath == null)
+    {
+      JobBoard.Refund(job);
+      return;
+    }
+
+    var path = Concat(pickupPath, deliveryPath);
+    if (path.Count < 2)
+    {
+      // src == dst (same hex). Synthesize a 1-step path so the carrier still
+      // transitions through Arrived next tick and the cargo is delivered.
+      path = new List<HexCoord> { carrier.Hex, job.Destination.Origin };
+    }
+    carrier.AssignJob(job, path);
+  }
+
+  private static List<HexCoord> Concat(
+      IReadOnlyList<HexCoord> a, IReadOnlyList<HexCoord> b)
+  {
+    var result = new List<HexCoord>(a.Count + b.Count - 1);
+    result.AddRange(a);
+    for (var i = 1; i < b.Count; i++) { result.Add(b[i]); }
+    return result;
+  }
 }

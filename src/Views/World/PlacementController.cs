@@ -1,13 +1,14 @@
 using Godot;
 using SettlersX.Core;
+using SettlersX.Sim.World;
 using SettlersX.Sim.World.Intents;
 
 namespace SettlersX.Views.World;
 
 /// <summary>
-/// Phase 1 placement controller: hotkey "1" places a storehouse at the hovered hex.
-/// Submits a <see cref="PlaceBuildingIntent"/> via GameManager; the sim decides
-/// whether to accept and emits BuildingConstructed via EventBus on success.
+/// F2a placement controller: each number key 1-4 places a different building at the
+/// hovered hex. The mapping mirrors <see cref="BuildingCatalog"/> DefIds and avoids
+/// a separate selection-mode model — one keypress, one intent.
 /// </summary>
 public partial class PlacementController : Node
 {
@@ -18,8 +19,19 @@ public partial class PlacementController : Node
     if (Picker == null || !Picker.HasHover) { return; }
     if (@event is not InputEventKey key) { return; }
     if (!key.Pressed || key.Echo) { return; }
-    if (key.Keycode != Key.Key1) { return; }
+
+    var defId = DefIdForKey(key.Keycode);
+    if (defId == null) { return; }
     GameManager.Instance.SubmitIntent(
-        new PlaceBuildingIntent("storehouse", Picker.HoveredHex, OwnerPlayerId: 0));
+        new PlaceBuildingIntent(defId, Picker.HoveredHex, OwnerPlayerId: 0));
   }
+
+  private static string? DefIdForKey(Key keycode) => keycode switch
+  {
+    Key.Key1 => BuildingCatalog.StorehouseId,
+    Key.Key2 => BuildingCatalog.LumberCampId,
+    Key.Key3 => BuildingCatalog.SawmillId,
+    Key.Key4 => BuildingCatalog.ConstructionSiteId,
+    _ => null,
+  };
 }

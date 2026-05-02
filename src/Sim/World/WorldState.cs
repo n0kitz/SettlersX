@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using SettlersX.Sim.Economy;
 using SettlersX.Sim.Pathfinding;
+using SettlersX.Sim.Production;
 using SettlersX.Sim.World.Intents;
 
 namespace SettlersX.Sim.World;
@@ -16,8 +17,11 @@ public class WorldState
   public SectorGraph Sectors { get; }
   public RoadGraph Roads { get; }
   public BuildingRegistry Buildings { get; }
+  public BuildingCatalog Catalog { get; }
   public IntentQueue Intents { get; }
   public List<Carrier> Carriers { get; } = new();
+
+  public int CarriersPerStorehouse { get; }
 
   private int _nextCarrierId = 1;
 
@@ -36,13 +40,30 @@ public class WorldState
   /// <summary>Plain C# event fired when a carrier is spawned.</summary>
   public event Action<Carrier>? CarrierSpawned;
 
+  /// <summary>
+  /// Fired by ProductionSystem after a construction site is promoted to its
+  /// finished form. Listeners (HUD, audio, future stats) read building state at
+  /// the supplied hex; the registry has already swapped DefId/Kind atomically.
+  /// </summary>
+  public event Action<HexCoord>? ConstructionCompleted;
+
   public WorldState(int gridWidth, int gridHeight)
+      : this(gridWidth, gridHeight, BuildingCatalog.CreateDefault(), carriersPerStorehouse: 3)
+  {
+  }
+
+  public WorldState(
+      int gridWidth, int gridHeight,
+      BuildingCatalog catalog,
+      int carriersPerStorehouse)
   {
     Grid = new HexGrid(gridWidth, gridHeight);
     Sectors = BuildPlaceholderSectors(Grid);
     Roads = new RoadGraph();
-    Buildings = new BuildingRegistry();
+    Catalog = catalog;
+    Buildings = new BuildingRegistry(catalog);
     Intents = new IntentQueue();
+    CarriersPerStorehouse = carriersPerStorehouse;
   }
 
   /// <summary>
@@ -53,20 +74,24 @@ public class WorldState
   {
     ApplyIntents();
     // AI phase — F2b+
-    // Pathfinding phase — dirty-path recomputation lands with chain logic in F2a
-    TransportSystem.Tick(this);
-    // Consumption phase — F2a
+    // Pathfinding phase — dirty-path recomputation lands when chains span sectors
+    ProductionSystem.Tick(this);
+    TransportSystem.Tick(this, CarriersPerStorehouse);
+    // Consumption is folded into ProductionSystem (input drained on recipe start).
     // Combat phase — F3
     // Diplomacy phase — F3+
   }
 
-  public Carrier SpawnCarrier(HexCoord origin)
+  public Carrier SpawnCarrier(HexCoord origin, int homeBuildingId)
   {
-    var carrier = new Carrier(_nextCarrierId++, origin);
+    var carrier = new Carrier(_nextCarrierId++, origin, homeBuildingId);
     Carriers.Add(carrier);
     CarrierSpawned?.Invoke(carrier);
     return carrier;
   }
+
+  internal void RaiseConstructionCompleted(HexCoord hex) =>
+      ConstructionCompleted?.Invoke(hex);
 
   /// <summary>
   /// View-facing per-tick snapshot. Returns prev/next world positions for every
@@ -84,7 +109,8 @@ public class WorldState
           c.PrevHex.ToWorld(hexSize),
           c.Hex.ToWorld(hexSize),
           c.State,
-          c.Hex));
+          c.Hex,
+          c.Cargo));
     }
     return list;
   }
