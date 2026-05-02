@@ -1,7 +1,8 @@
 # PLAN.md — SettlersX
 
 ## Current Phase
-**Phase 1 — Map, Roads & One Carrier** ⏳ in review (awaiting CI green)
+**Phase S1 — Build & Supply Chain Hardening** ✅ implementation complete (awaiting CI green)
+Next: **Phase 2a — First Vertical Slice (One Full Chain)**
 
 ## Phase 1 — Map, Roads & One Carrier
 **Status: Implementation complete, pending CI verification**
@@ -106,6 +107,33 @@
 
 ## Phase 6 — Polish, Fog of War, Campaign
 **Status: Not started**
+
+---
+
+## Security Phase S1 — Build & Supply Chain Hardening
+**Status: Implementation complete, pending CI verification**
+
+### Exit Criteria
+- [x] `RestorePackagesWithLockFile=true` in csproj
+- [x] `Deterministic=true` and conditional `ContinuousIntegrationBuild` set
+- [x] Newtonsoft.Json pinned to exact version (`13.0.3`)
+- [x] CI runs `dotnet list package --vulnerable --include-transitive`
+- [x] CodeQL workflow on push, PR, and weekly schedule
+- [x] Dependabot config for NuGet + github-actions
+- [x] `docs/security/threat-model.md` v0.1 with S1 STRIDE table
+- [x] `docs/security/branch-rules.md` documents required GitHub settings
+- [x] ADR 0009 written and listed in ADR README
+- [x] Architecture test guards csproj supply-chain switches
+- [ ] CI green on first run after this commit
+- [ ] `packages.lock.json` generated and committed in follow-up
+
+### S1 Notes
+- Action SHA-pinning and SBOM generation are deferred follow-ups, tracked
+  in `docs/security/threat-model.md` open follow-ups.
+- Once `packages.lock.json` is committed, switch CI to
+  `RestoreLockedMode=true` in a follow-up commit.
+- Workflow `working-directory: SettlersX` mismatch (pre-existing) flagged
+  in threat-model follow-ups for investigation.
 
 ---
 
