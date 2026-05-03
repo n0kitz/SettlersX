@@ -1,8 +1,8 @@
 # ADR 0009 — Build & Supply Chain Hardening
 
-- Status: Accepted
-- Date: 2026-05-02
-- Context phase: S1
+**Status:** Accepted
+**Date:** 2026-05-02
+**Context phase:** S1
 
 ## Context
 

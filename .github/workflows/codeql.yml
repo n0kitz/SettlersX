@@ -21,6 +21,10 @@ jobs:
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: true
       DOTNET_NOLOGO: true
+    defaults:
+      run:
+        shell: bash
+        working-directory: SettlersX
 
     steps:
       - name: "📋 Checkout"
@@ -29,7 +33,7 @@ jobs:
       - name: "💽 Setup .NET SDK"
         uses: actions/setup-dotnet@v4
         with:
-          global-json-file: global.json
+          global-json-file: SettlersX/global.json
 
       - name: "🧠 Initialize CodeQL"
         uses: github/codeql-action/init@v3

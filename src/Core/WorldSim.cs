@@ -2,6 +2,7 @@ using System;
 using Godot;
 using SettlersX.Sim.Core;
 using SettlersX.Sim.World;
+using SettlersX.Sim.World.Intents;
 
 namespace SettlersX.Core;
 
@@ -12,9 +13,6 @@ namespace SettlersX.Core;
 /// </summary>
 public partial class WorldSim : Node
 {
-  private const int DefaultGridWidth = 20;
-  private const int DefaultGridHeight = 20;
-
   private static WorldSim? _instance;
   public static WorldSim Instance => _instance
       ?? throw new InvalidOperationException("WorldSim autoload not initialized");
@@ -47,6 +45,8 @@ public partial class WorldSim : Node
     HexSize = (double)(balance["hex"]!["size"]!);
     Engine = new TickEngine(tickHz: hz);
 
+    var gridWidth = (int)(balance["grid"]!["width"]!);
+    var gridHeight = (int)(balance["grid"]!["height"]!);
     var carriersPerStorehouse = (int)(balance["storehouse"]!["base_carrier_count"]!);
     var catalog = BuildingCatalog.CreateDefault(
         lumberDuration: (int)(balance["chain"]!["lumber_camp_duration_ticks"]!),
@@ -54,10 +54,11 @@ public partial class WorldSim : Node
         bufferCapacity: (int)(balance["chain"]!["buffer_capacity"]!),
         storehouseStockCap: (int)(balance["chain"]!["storehouse_stock_capacity"]!),
         houseCostPlanks: (int)(balance["chain"]!["house_cost_planks"]!));
-    World = new WorldState(DefaultGridWidth, DefaultGridHeight, catalog, carriersPerStorehouse);
+    World = new WorldState(gridWidth, gridHeight, catalog, carriersPerStorehouse);
     World.BuildingPlaced += OnBuildingPlaced;
     World.RoadBuilt += OnRoadBuilt;
     World.ConstructionCompleted += OnConstructionCompleted;
+    EventBus.Instance.IntentSubmitted += OnIntentReceived;
   }
 
   public override void _ExitTree()
@@ -68,8 +69,11 @@ public partial class WorldSim : Node
       World.RoadBuilt -= OnRoadBuilt;
       World.ConstructionCompleted -= OnConstructionCompleted;
     }
+    EventBus.Instance.IntentSubmitted -= OnIntentReceived;
     if (_instance == this) { _instance = null; }
   }
+
+  private void OnIntentReceived(IIntent intent) => World?.Intents.Enqueue(intent);
 
   private void OnBuildingPlaced(Building building)
   {

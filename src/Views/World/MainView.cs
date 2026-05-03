@@ -8,7 +8,6 @@ namespace SettlersX.Views.World;
 
 public partial class MainView : Node3D
 {
-  private EventBus? _eventBus;
   private HexGridView? _gridView;
   private HexPicker? _picker;
   private RoadView? _roadView;
@@ -21,9 +20,6 @@ public partial class MainView : Node3D
   public override void _Ready()
   {
     GD.Print("MainView ready");
-    _eventBus = EventBus.Instance;
-    _eventBus.GameTicked += OnGameTicked;
-
     var sim = WorldSim.Instance;
     if (sim.World == null) { return; }
     var hexSize = sim.HexSize;
@@ -60,16 +56,4 @@ public partial class MainView : Node3D
     AddChild(_hud);
   }
 
-  public override void _ExitTree()
-  {
-    if (IsInstanceValid(_eventBus))
-    {
-      _eventBus!.GameTicked -= OnGameTicked;
-    }
-  }
-
-  private void OnGameTicked(int tick)
-  {
-    // Debug HUD subscribes directly to EventBus.GameTicked in F1.5.
-  }
 }

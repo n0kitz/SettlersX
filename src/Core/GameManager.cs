@@ -33,10 +33,10 @@ public partial class GameManager : Node
 
   /// <summary>
   /// Queue a player or AI intent for the next tick's Input phase.
-  /// Silently drops the intent if the sim has not finished initialising.
+  /// Raises EventBus.IntentSubmitted; WorldSim enqueues it into the sim on receive.
   /// </summary>
   public void SubmitIntent(IIntent intent)
   {
-    WorldSim.Instance.World?.Intents.Enqueue(intent);
+    EventBus.Instance.RaiseIntentSubmitted(intent);
   }
 }

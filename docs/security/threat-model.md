@@ -1,8 +1,7 @@
 # SettlersX Threat Model (v0.1)
 
 > Living document. Each security phase (S1–S5) appends a new section.
-> Phase numbers below reference the roadmap in
-> `/root/.claude/plans/plan-the-next-steps-synthetic-widget.md`.
+> Phase numbers below reference the roadmap in `PLAN.md`.
 
 ---
 

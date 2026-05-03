@@ -17,6 +17,7 @@ public partial class RoadView : Node3D
   private AStar3D? _astar;
   private readonly Dictionary<Vector2I, long> _hexToId = new();
   private long _nextId;
+  private StandardMaterial3D? _roadMat;
 
   public double HexSize { get; set; } = 1.0;
 
@@ -27,6 +28,11 @@ public partial class RoadView : Node3D
     _astar = new AStar3D();
     _meshInstance = new MeshInstance3D { Name = "RoadMesh" };
     AddChild(_meshInstance);
+    _roadMat = new StandardMaterial3D
+    {
+      AlbedoColor = new Color(0.55f, 0.4f, 0.2f),
+      ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+    };
   }
 
   public override void _ExitTree()
@@ -76,12 +82,7 @@ public partial class RoadView : Node3D
         st.AddVertex(b);
       }
     }
-    var mat = new StandardMaterial3D
-    {
-      AlbedoColor = new Color(0.55f, 0.4f, 0.2f),
-      ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-    };
     _meshInstance!.Mesh = st.Commit();
-    _meshInstance.MaterialOverride = mat;
+    _meshInstance.MaterialOverride = _roadMat;
   }
 }
