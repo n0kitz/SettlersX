@@ -41,6 +41,9 @@ public class HexCoordTests
     AssertThat(a.Distance(a)).IsEqual(0);
   }
 
+  // Vector3 is a pure C# struct — no Godot runtime required.
+  // GdUnit0501 is overly conservative for math-only Godot types.
+#pragma warning disable GdUnit0501
   [TestCase]
   public void ToWorld_OriginAtZero()
   {
@@ -80,4 +83,5 @@ public class HexCoordTests
     var back = HexCoord.FromWorld(world, size);
     AssertThat(back).IsEqual(coord);
   }
+#pragma warning restore GdUnit0501
 }
