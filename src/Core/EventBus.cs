@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using SettlersX.Sim.World.Intents;
 
 namespace SettlersX.Core;
 
@@ -37,4 +38,23 @@ public partial class EventBus : Node
   public delegate void VictoryAchievedEventHandler(
       int playerId, string victoryPath);
   [Signal] public delegate void GameTickedEventHandler(int tickNumber);
+
+  [Signal]
+  public delegate void RoadBuiltEventHandler(Vector2I a, Vector2I b);
+
+  /// <summary>
+  /// Plain C# event (not a Godot signal — IIntent is not Variant-compatible).
+  /// GameManager raises this; WorldSim subscribes and drains into the sim's IntentQueue.
+  /// </summary>
+  public event Action<IIntent>? IntentSubmitted;
+
+  /// <summary>Raises <see cref="IntentSubmitted"/>.</summary>
+  public void RaiseIntentSubmitted(IIntent intent) => IntentSubmitted?.Invoke(intent);
+
+  /// <summary>
+  /// Fires once a construction site is promoted to its finished form. Carries the
+  /// new DefId (e.g. <c>"house"</c>) so the view can re-skin without reading sim state.
+  /// </summary>
+  [Signal]
+  public delegate void BuildingFinalizedEventHandler(string defId, Vector2I hexCell);
 }

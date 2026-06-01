@@ -20,8 +20,19 @@
     "food_fancy_multiplier": 3.0,
     "tool_requirement_units": 1
   },
+  "chain": {
+    "lumber_camp_duration_ticks": 30,
+    "sawmill_duration_ticks": 20,
+    "buffer_capacity": 4,
+    "storehouse_stock_capacity": 999,
+    "house_cost_planks": 5
+  },
   "hex": {
     "size": 1.0,
     "flat_top": true
+  },
+  "grid": {
+    "width": 20,
+    "height": 20
   }
 }

@@ -15,7 +15,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: SettlersX
+        working-directory: .
     steps:
       - name: "\U0001F4CB Checkout"
         uses: actions/checkout@v4
@@ -23,17 +23,20 @@ jobs:
       - name: "\U0001F4BD Setup .NET SDK"
         uses: actions/setup-dotnet@v4
         with:
-          global-json-file: SettlersX/global.json
+          global-json-file: global.json
 
       - name: "\U0001F4E6 Cache NuGet Packages"
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('SettlersX/*.csproj') }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('*.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
 
       - name: "\U0001F4E6 Restore Dependencies"
-        run: dotnet restore
+        run: dotnet restore --use-lock-file
+
+      - name: "\U0001F6E1 Vulnerable Package Audit"
+        run: dotnet list package --vulnerable --include-transitive
 
       - name: "\U0001F527 Build"
         run: dotnet build SettlersX.sln -c Debug --no-restore

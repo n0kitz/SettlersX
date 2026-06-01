@@ -73,8 +73,11 @@ before any structural change. Read src/<system>/CLAUDE.md for per-system rules.
 - Every GodotObject subclass: public partial class Foo : Node
 - Signal delegates: PastTenseVerb + EventHandler (e.g. BuildingConstructedEventHandler)
 - Tests: <Class>Tests class, <Method>_<Condition>_<Expected> methods, AAA
-- Commits: Conventional Commits. Scopes: sim, view, data, ui, ai, build, test
-- Double for sim arithmetic. Fixed-point serialization only at save boundary.
+- Commits: Conventional Commits. Scopes: sim, view, data, ui, ai, build, test, sec
+- Claude Code auto-generated branches use the claude/ prefix (e.g. claude/<short-id>)
+- Double for sim arithmetic — continuous quantities (positions, rates, multipliers, timers).
+  Discrete counters (resource amounts, tick integers, hex coordinates, IDs) may use int.
+  Fixed-point serialization only at save boundary.
 
 ## Progress
 See PLAN.md for current phase and exit criteria.

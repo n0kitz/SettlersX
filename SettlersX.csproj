@@ -6,6 +6,10 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AnalysisLevel>latest</AnalysisLevel>
+    <!-- S1 supply-chain hardening (docs/adr/0009-build-supply-chain.md) -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,6 +27,6 @@
     <PackageReference Include="gdUnit4.api" Version="5.*" />
     <PackageReference Include="gdUnit4.test.adapter" Version="3.*" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.*" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 </Project>

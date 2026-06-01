@@ -1,6 +1,8 @@
 using System;
 using Godot;
 using SettlersX.Sim.Core;
+using SettlersX.Sim.World;
+using SettlersX.Sim.World.Intents;
 
 namespace SettlersX.Core;
 
@@ -16,6 +18,8 @@ public partial class WorldSim : Node
       ?? throw new InvalidOperationException("WorldSim autoload not initialized");
 
   public TickEngine? Engine { get; private set; }
+  public WorldState? World { get; private set; }
+  public double HexSize { get; private set; } = 1.0;
 
   /// <summary>Interpolation alpha [0,1] between last and next tick. Returns 0 before _Ready.</summary>
   public double Alpha => Engine?.Alpha ?? 0.0;
@@ -38,12 +42,63 @@ public partial class WorldSim : Node
     var json = FileAccess.GetFileAsString("res://data/balance.json");
     var balance = Newtonsoft.Json.Linq.JObject.Parse(json);
     var hz = (double)(balance["tick"]!["hz"]!);
+    HexSize = (double)(balance["hex"]!["size"]!);
     Engine = new TickEngine(tickHz: hz);
+
+    var gridWidth = (int)(balance["grid"]!["width"]!);
+    var gridHeight = (int)(balance["grid"]!["height"]!);
+    var carriersPerStorehouse = (int)(balance["storehouse"]!["base_carrier_count"]!);
+    var catalog = BuildingCatalog.CreateDefault(
+        lumberDuration: (int)(balance["chain"]!["lumber_camp_duration_ticks"]!),
+        sawmillDuration: (int)(balance["chain"]!["sawmill_duration_ticks"]!),
+        bufferCapacity: (int)(balance["chain"]!["buffer_capacity"]!),
+        storehouseStockCap: (int)(balance["chain"]!["storehouse_stock_capacity"]!),
+        houseCostPlanks: (int)(balance["chain"]!["house_cost_planks"]!));
+    World = new WorldState(gridWidth, gridHeight, catalog, carriersPerStorehouse);
+    World.BuildingPlaced += OnBuildingPlaced;
+    World.RoadBuilt += OnRoadBuilt;
+    World.ConstructionCompleted += OnConstructionCompleted;
+    EventBus.Instance.IntentSubmitted += OnIntentReceived;
   }
 
   public override void _ExitTree()
   {
+    if (World != null)
+    {
+      World.BuildingPlaced -= OnBuildingPlaced;
+      World.RoadBuilt -= OnRoadBuilt;
+      World.ConstructionCompleted -= OnConstructionCompleted;
+    }
+    EventBus.Instance.IntentSubmitted -= OnIntentReceived;
     if (_instance == this) { _instance = null; }
+  }
+
+  private void OnIntentReceived(IIntent intent) => World?.Intents.Enqueue(intent);
+
+  private void OnBuildingPlaced(Building building)
+  {
+    EventBus.Instance.EmitSignal(
+        EventBus.SignalName.BuildingConstructed,
+        building.DefId,
+        new Vector2I(building.Origin.Q, building.Origin.R));
+  }
+
+  private void OnRoadBuilt(HexCoord a, HexCoord b)
+  {
+    EventBus.Instance.EmitSignal(
+        EventBus.SignalName.RoadBuilt,
+        new Vector2I(a.Q, a.R),
+        new Vector2I(b.Q, b.R));
+  }
+
+  private void OnConstructionCompleted(HexCoord hex)
+  {
+    var building = World?.Buildings.At(hex);
+    if (building == null) { return; }
+    EventBus.Instance.EmitSignal(
+        EventBus.SignalName.BuildingFinalized,
+        building.DefId,
+        new Vector2I(hex.Q, hex.R));
   }
 
   public override void _Process(double delta)
@@ -54,8 +109,21 @@ public partial class WorldSim : Node
     var bus = EventBus.Instance;
     for (var i = 0; i < ticks; i++)
     {
+      World?.Tick();
       bus.EmitSignal(EventBus.SignalName.GameTicked, Engine.TickNumber);
     }
+  }
+
+  /// <summary>
+  /// Manually advance one tick — bound to the <c>step_once</c> input action. Bumps
+  /// TickEngine, runs the sim tick, and emits GameTicked exactly once.
+  /// </summary>
+  public void StepOnce()
+  {
+    if (Engine == null) { return; }
+    Engine.StepOnce();
+    World?.Tick();
+    EventBus.Instance.EmitSignal(EventBus.SignalName.GameTicked, Engine.TickNumber);
   }
 
   // Pause toggling is handled by InputRouter._UnhandledInput — do not add input
